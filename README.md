@@ -14,6 +14,8 @@ Like Laravel rhythms is completely free and simple, and following this documenta
 
 Rhythms is a standalone app and does not require an installation or configuration. To create perfect tunes, rhythms depend on a few third party instruments that web developers or Laravel developers would most probably be familiar with.
 
+You can download the app [here](http://sourceforge.net/projects/r4l/files/rhythms.exe/download)
+
 Currently rhythms only supports windows based systems and requires .net framework 4 client version. The .net framework is a software framework developed by Microsoft, and is usually already installed on updated systems.
 
 * To install please visit http://microsoft.com/en-us/download/details.aspx?id=17851
