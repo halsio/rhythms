@@ -1,5 +1,8 @@
 ![Screenshot](http://i39.tinypic.com/2n3p1u/5)
 
+Status: Indevelopement | Latest Stable Release [Version 1.0](http://sourceforge.net/p/r4l)
+-----------------------------------------------------
+
 ![Screenshot](http://i39.tinypic.com/5yapux/5)
 
 Rhythms is an open source app developed for Laravel 4, to simplify the setup and maintenance of your Laravel based projects. Our aim is to provide a one click solution to install and update your development files.
