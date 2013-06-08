@@ -1,6 +1,6 @@
 ![Screenshot](http://i39.tinypic.com/2n3p1u/5)
 
-Status: Indevelopement | Latest Stable [Version 1.0](http://sourceforge.net/p/r4l)
+Status: In Developement | Latest Stable [Version 1.0](http://sourceforge.net/p/r4l)
 -----------------------------------------------------
 
 ![Screenshot](http://i39.tinypic.com/5yapux/5)
