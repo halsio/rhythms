@@ -6,7 +6,7 @@ Public Class Form1
 
     '///////////////////////////////////////////////////
 
-#Region "Internet""
+#Region "Check Internet Connection"
 
     'Create placeholders for internet status.
     Dim statusHTTP As Boolean = Nothing
@@ -31,7 +31,7 @@ Public Class Form1
             'If an error is raised, internet is unavailable.
             req = Nothing
             statusHTTP = False
-            updateText(ex.Message, lblError)
+            updateText(ex.Message & vbNewLine & "Theres was a problem determining internet status. Please restart rhythms with admin rights.", lblError)
         End Try
     End Sub
 
@@ -39,7 +39,7 @@ Public Class Form1
 
     '///////////////////////////////////////////////////
 
-#Region "Host"
+#Region "Check Host Status"
 
     'Create placeholder for Host path.
     Dim dirHOSTfile As String = Nothing
@@ -65,7 +65,7 @@ Public Class Form1
         Catch ex As Exception
             'On error unset Host path.
             lblHostStatus.Text = "UNWRITABLE"
-            updateText(ex.Message, lblError)
+            updateText(ex.Message & vbNewLine & "Theres was a problem accessing your hosts file. Please restart rhythms with admin rights.", lblError)
         End Try
     End Sub
 
@@ -89,8 +89,13 @@ Public Class Form1
                 dirHTTPDexe = myprocess.MainModule.FileName.ToString
                 procInstance += 1
             Next
-            'Set Apache confguration path.
-            dirHTTPDconf = dirHTTPDexe.Replace("bin\httpd.exe", "conf\httpd.conf")
+            If Not dirHTTPDexe = Nothing Then
+                'Set Apache confguration path.
+                dirHTTPDconf = dirHTTPDexe.Replace("bin\httpd.exe", "conf\httpd.conf")
+            Else
+                updateText("Rhythms couldnt find the apache process. Please start apache and run Rhythms with admin rights.", lblError)
+                Exit Sub
+            End If
             'Read Virtual Host file contents.
             Dim fileLines As String = Nothing
             Using streamReader As New StreamReader(dirHTTPDconf)
@@ -109,19 +114,91 @@ Public Class Form1
             lblApacheStatus.Text = "Running"
             lblHTTPDStatus.Text = "Modifiable"
         Catch ex As Exception
-            updateText(ex.Message & vbNewLine & "You need to reprojectify with admin rights.", lblError)
+            updateText(ex.Message & vbNewLine & "Rhythms couldnt find the apache process. Please start apache and run Rhythms with admin rights.", lblError)
         End Try
     End Sub
 
     'Restart HTTPD
     Sub restartHTTPD()
-        On Error Resume Next
+        Try
         For Each proc As Process In Process.GetProcessesByName("httpd")
             proc.Kill()
         Next
         Dim startInfo As New ProcessStartInfo(dirHTTPDexe)
         startInfo.WindowStyle = ProcessWindowStyle.Hidden
-        Process.Start(startInfo)
+            Process.Start(startInfo)
+        Catch ex As Exception
+            updateText(ex.Message & vbNewLine & "We tried restarting Apache and failed. You might need to do it manually.", lblError)
+        End Try
+    End Sub
+
+#End Region
+
+    '///////////////////////////////////////////////////
+
+#Region "CMD Acquisition"
+
+    'Setup a new delegate for the command module.
+    Delegate Sub SetOutput_Delegate(ByVal [Label] As Label, ByVal [text] As String)
+
+    'Setup the output retrieval thread.
+    Private Sub setoutputThreadSafe(ByVal [Label] As Label, ByVal [text] As String)
+        If [Label].InvokeRequired Then
+            Dim MyDelegate As New SetOutput_Delegate(AddressOf setoutputThreadSafe)
+            Me.Invoke(MyDelegate, New Object() {[Label], [text]})
+        Else
+            [Label].Text = [text]
+        End If
+    End Sub
+
+    'Time for some music. Acquire command module.
+    Private Sub CMDAcquisition(ByVal procPath As String, ByVal procArg As String, ByVal procOutput As Boolean, ByVal outputDest As Object, Optional ByVal procArgSub1 As String = Nothing, Optional ByVal procArgSub2 As String = Nothing, Optional ByVal procArgSub3 As String = Nothing, Optional ByVal procArgSub4 As String = Nothing)
+        Try
+            'Start a new command process and hide it.
+            Dim startInfo As New ProcessStartInfo(procPath)
+            startInfo.UseShellExecute = False
+            startInfo.WindowStyle = ProcessWindowStyle.Hidden 'Check for errors here.
+            startInfo.CreateNoWindow = True
+            startInfo.RedirectStandardOutput = True
+            startInfo.RedirectStandardInput = True
+            startInfo.Arguments = procArg
+
+            'Take control of the command process and begin invoking.
+            Dim acqProcess As New Process
+            acqProcess.StartInfo = startInfo
+            acqProcess.Start()
+            acqProcess.StandardInput.WriteLine(procArg)
+            If Not procArgSub1 = Nothing Then acqProcess.StandardInput.WriteLine(procArgSub1)
+            If Not procArgSub2 = Nothing Then acqProcess.StandardInput.WriteLine(procArgSub2)
+            If Not procArgSub3 = Nothing Then acqProcess.StandardInput.WriteLine(procArgSub3)
+            If Not procArgSub4 = Nothing Then acqProcess.StandardInput.WriteLine(procArgSub4)
+            acqProcess.StandardInput.WriteLine("exit")
+
+            'Send the command responses to the desired display object.
+            If procOutput = True Then
+                Using standardOutput As StreamReader = acqProcess.StandardOutput
+                    Do
+                        Application.DoEvents()
+                        System.Threading.Thread.Sleep(10)
+                        Dim finalOutput = standardOutput.ReadLine
+                        If Not standardOutput.ReadLine = Nothing Then
+
+                            If finalOutput.Contains("Microsoft") Then
+                                finalOutput = "Laravel Console" & vbNewLine & "Laravel Framework Version 4 2013" & vbNewLine & "Starting Thread..."
+                            End If
+
+                            If finalOutput = Nothing Then
+                                finalOutput = "Processing..."
+                            End If
+
+                            setoutputThreadSafe(outputDest, finalOutput)
+                        End If
+                    Loop While acqProcess.HasExited = False
+                End Using
+            End If
+        Catch ex As Exception
+            setoutputThreadSafe(lblError, ex.Message)
+        End Try
     End Sub
 
 #End Region
@@ -231,75 +308,6 @@ Public Class Form1
 
     '///////////////////////////////////////////////////
 
-#Region "CMD Acquisition"
-
-    'Setup a new delegate for the command module.
-    Delegate Sub SetOutput_Delegate(ByVal [Label] As Label, ByVal [text] As String)
-
-    'Setup the output retrieval thread.
-    Private Sub setoutputThreadSafe(ByVal [Label] As Label, ByVal [text] As String)
-        If [Label].InvokeRequired Then
-            Dim MyDelegate As New SetOutput_Delegate(AddressOf setoutputThreadSafe)
-            Me.Invoke(MyDelegate, New Object() {[Label], [text]})
-        Else
-            [Label].Text = [text]
-        End If
-    End Sub
-
-    'Time for some music. Acquire command module.
-    Private Sub CMDAcquisition(ByVal procPath As String, ByVal procArg As String, ByVal procOutput As Boolean, ByVal outputDest As Object, Optional ByVal procArgSub1 As String = Nothing, Optional ByVal procArgSub2 As String = Nothing, Optional ByVal procArgSub3 As String = Nothing, Optional ByVal procArgSub4 As String = Nothing)
-        Try
-            'Start a new command process and hide it.
-            Dim startInfo As New ProcessStartInfo(procPath)
-            startInfo.UseShellExecute = False
-            startInfo.WindowStyle = ProcessWindowStyle.Hidden 'Check for errors here.
-            startInfo.CreateNoWindow = True
-            startInfo.RedirectStandardOutput = True
-            startInfo.RedirectStandardInput = True
-            startInfo.Arguments = procArg
-
-            'Take control of the command process and begin invoking.
-            Dim acqProcess As New Process
-            acqProcess.StartInfo = startInfo
-            acqProcess.Start()
-            acqProcess.StandardInput.WriteLine(procArg)
-            If Not procArgSub1 = Nothing Then acqProcess.StandardInput.WriteLine(procArgSub1)
-            If Not procArgSub2 = Nothing Then acqProcess.StandardInput.WriteLine(procArgSub2)
-            If Not procArgSub3 = Nothing Then acqProcess.StandardInput.WriteLine(procArgSub3)
-            If Not procArgSub4 = Nothing Then acqProcess.StandardInput.WriteLine(procArgSub4)
-            acqProcess.StandardInput.WriteLine("exit")
-
-            'Send the command responses to the desired display object.
-            If procOutput = True Then
-                Using standardOutput As StreamReader = acqProcess.StandardOutput
-                    Do
-                        Application.DoEvents()
-                        System.Threading.Thread.Sleep(10)
-                        Dim finalOutput = standardOutput.ReadLine
-                        If Not standardOutput.ReadLine = Nothing Then
-
-                            If finalOutput.Contains("Microsoft") Then
-                                finalOutput = "Laravel Console" & vbNewLine & "Laravel Framework Version 4 2013" & vbNewLine & "Starting Thread..."
-                            End If
-
-                            If finalOutput = Nothing Then
-                                finalOutput = "Installing Laravel..."
-                            End If
-
-                            setoutputThreadSafe(outputDest, finalOutput)
-                        End If
-                    Loop While acqProcess.HasExited = False
-                End Using
-            End If
-        Catch ex As Exception
-            setoutputThreadSafe(lblError, ex.Message)
-        End Try
-    End Sub
-
-#End Region
-
-    '///////////////////////////////////////////////////
-
 #Region "Web Browser"
 
     Dim marcusBefore As String
@@ -345,6 +353,8 @@ Public Class Form1
         Panel9.Visible = False
         Panel10.Visible = False
         lblCMDOutput.Text = "Your project has been set up. Would you like to setup another one?"
+        btnUpdate.Enabled = True
+
         btnMain.Text = "Compose"
         stepMain.Text = "Step 3"
         stepSub.Text = "you can now exit rhythms and enjoy laravel"
@@ -396,8 +406,8 @@ Public Class Form1
 
     '///////////////////////////////////////////////////
 
-#Region "Input Validators"
-
+#Region "Input Handlers"
+    'Input validator for Project Name field.
     Private Sub txtProjName_KeyPress(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs) Handles txtProjName.KeyPress
         Dim allowedChars As String = "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm1234567890_-." & vbBack
         If allowedChars.IndexOf(e.KeyChar) = -1 Then
@@ -502,25 +512,31 @@ Public Class Form1
         btnUpdate.Enabled = True
         btnMain.Text = "Compose"
         btnMain.Enabled = True
-        lblCMDOutput.Text = "Your project has just been updated. You can update another one or install a fresh copy?"
+        lblCMDOutput.Text = "Your project has just been updated. Would you like to update another one or install a fresh copy?"
+        updateText("Any errors encountered during runtime will show up here. Click the Titlebar to close this sidebar.", lblError)
     End Sub
 
     Private Sub btnUpdate_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnUpdate.Click
-        If Not My.Computer.FileSystem.FileExists(txtUpdateDir.Text & "\composer.json") Or txtUpdateDir.Text = "Select Project Path" Then
-            updateText("Projectifier has detected that the current selected rhythm has no harmoney at all. Your project will not be updated. Use a composer for the job.", lblError)
-            Exit Sub
+        If Not txtUpdateDir.Text = "Select Project Path" Then
+            If Not My.Computer.FileSystem.FileExists(txtUpdateDir.Text & "\composer.json") Or txtUpdateDir.Text = "Select Project Path" Then
+                updateText("Rhythms has detected that the current selected rhythm has no harmoney at all. Your project will not be updated. Use a composer for the job.", lblError)
+                Exit Sub
+            Else
+                pnlInstaller.Visible = True
+                pnlRepos.Visible = False
+                pnlHome.Visible = False
+                lblBG3.Visible = True
+                txtUpdateDir.Visible = True
+                btnUpdate.Visible = True
+                btnUpdate.Enabled = False
+                btnMain.Text = "Updating..."
+                btnMain.Enabled = False
+                bgupdateWorker.RunWorkerAsync()
+            End If
         Else
-            pnlInstaller.Visible = True
-            pnlRepos.Visible = False
-            pnlHome.Visible = False
-            lblBG3.Visible = True
-            txtUpdateDir.Visible = True
-            btnUpdate.Visible = True
-            btnUpdate.Enabled = False
-            btnMain.Text = "Updating..."
-            btnMain.Enabled = False
-            bgupdateWorker.RunWorkerAsync()
+            updateText("Please select a project.", lblError)
         End If
+        
     End Sub
 
 #End Region
@@ -638,10 +654,5 @@ Public Class Form1
     End Sub
 
 #End Region
-
-    Private Sub Panel3_Paint(ByVal sender As System.Object, ByVal e As System.Windows.Forms.PaintEventArgs) Handles Panel3.Paint
-
-    End Sub
-
 
 End Class

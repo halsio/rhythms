@@ -134,7 +134,7 @@ Partial Class Form1
         Me.lblCMDOutput.Size = New System.Drawing.Size(271, 125)
         Me.lblCMDOutput.TabIndex = 5
         Me.lblCMDOutput.Text = "What shall we call your new project? You can also assign a port for your virtual " & _
-            "server."
+    "host."
         Me.lblCMDOutput.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
         '
         'txtProjDir
@@ -403,7 +403,7 @@ Partial Class Form1
         'webBrowser
         '
         Me.webBrowser.IsWebBrowserContextMenuEnabled = False
-        Me.webBrowser.Location = New System.Drawing.Point(-11, -13)
+        Me.webBrowser.Location = New System.Drawing.Point(-13, -25)
         Me.webBrowser.MinimumSize = New System.Drawing.Size(20, 20)
         Me.webBrowser.Name = "webBrowser"
         Me.webBrowser.ScriptErrorsSuppressed = True
@@ -464,7 +464,7 @@ Partial Class Form1
         Me.lblError.Size = New System.Drawing.Size(352, 150)
         Me.lblError.TabIndex = 20
         Me.lblError.Text = "Any errors encountered during runtime will show up here. Click the Titlebar to cl" & _
-            "ose this sidebar."
+    "ose this sidebar."
         Me.lblError.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
         '
         'lblBG2
@@ -534,7 +534,7 @@ Partial Class Form1
         Me.lblApacheStatus.Name = "lblApacheStatus"
         Me.lblApacheStatus.Size = New System.Drawing.Size(266, 18)
         Me.lblApacheStatus.TabIndex = 14
-        Me.lblApacheStatus.Text = "C:\xampp\apache\bin"
+        Me.lblApacheStatus.Text = "None"
         '
         'lblInternetStatus
         '
