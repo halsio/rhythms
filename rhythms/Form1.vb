@@ -147,6 +147,7 @@ Public Class Form1
             Dim MyDelegate As New SetOutput_Delegate(AddressOf setoutputThreadSafe)
             Me.Invoke(MyDelegate, New Object() {[Label], [text]})
         Else
+
             [Label].Text = [text]
         End If
     End Sub
@@ -321,7 +322,9 @@ Public Class Form1
             If Not Marcus = "" And Marcus.Contains(""": """) And Not Marcus = marcusBefore And Not repoList.Items.Contains(Marcus) Then
                 repoList.Items.Add(Marcus)
                 marcusBefore = Marcus
+                'marcusBefore = Marcus
             End If
+
         End If
     End Sub
     'Inject script to better show packagist.
@@ -354,7 +357,6 @@ Public Class Form1
         Panel10.Visible = False
         lblCMDOutput.Text = "Your project has been set up. Would you like to setup another one?"
         btnUpdate.Enabled = True
-
         btnMain.Text = "Compose"
         stepMain.Text = "Step 3"
         stepSub.Text = "you can now exit rhythms and enjoy laravel"
