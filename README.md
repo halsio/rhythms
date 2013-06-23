@@ -19,9 +19,9 @@ Rhythms is a standalone app and does not require an installation or configuratio
 
 You can download the app [here](http://sourceforge.net/projects/r4l/files/rhythms.exe/download)
 
-Currently rhythms only supports windows based systems and requires .net framework 4 client version. The .net framework is a software framework developed by Microsoft, and is usually already installed on updated systems.
+Currently rhythms only supports windows based systems and requires .net framework 4.5 version. The .net framework is a software framework developed by Microsoft, and is usually already installed on updated systems.
 
-* To install please visit http://microsoft.com/en-us/download/details.aspx?id=17851
+* To install please visit http://microsoft.com/en-us/download/details.aspx?id=30653
 
 Install apache, if not already installed. While most cross-platform web servers should support rhythms, we have only vigorously tested rhythms on XAMPP, with apache 2 on 64 bit windows 8 systems.
 
